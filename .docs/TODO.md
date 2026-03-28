@@ -1,0 +1,4 @@
+- evolve a special item super power
+- increase length of the story
+- select specific items to detect or change computer vision model
+- improve persona of narrator
