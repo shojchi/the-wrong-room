@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { initializeObjectDetector } from '../lib/detector';
 import { isScannableItem } from '../lib/scannableItems';
 
