@@ -1,0 +1,16 @@
+{
+  "name": "live-api-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test:node": "node test-live-node.mjs"
+  },
+  "dependencies": {
+    "@google/genai": "latest",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

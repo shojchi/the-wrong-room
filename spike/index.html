@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live API Browser Spike</title>
+  <style>
+    body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 2rem; }
+    .log { white-space: pre-wrap; margin: 1rem 0; padding: 1rem; background: #16213e; border-radius: 8px; max-height: 300px; overflow-y: auto; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+    .info { color: #60a5fa; }
+    button { background: #6366f1; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: 1rem; margin: 0.5rem 0.5rem 0.5rem 0; }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    h1 { color: #a78bfa; }
+    h2 { color: #818cf8; margin-top: 2rem; }
+    #apiKeyInput { background: #16213e; border: 1px solid #4c4c6d; color: white; padding: 0.5rem; border-radius: 4px; width: 400px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Gemini Live API — Browser Spike Test</h1>
+  
+  <div>
+    <label>API Key: <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API key" /></label>
+  </div>
+
+  <h2>Test 1: SDK import & TEXT modality</h2>
+  <button id="btn1" onclick="runTest1()">Run Test 1</button>
+  <div id="log1" class="log">Waiting...</div>
+
+  <h2>Test 2: Raw WebSocket (browser-native)</h2>
+  <button id="btn2" onclick="runTest2()">Run Test 2</button>
+  <div id="log2" class="log">Waiting...</div>
+
+  <script type="module">
+    // ============================================================
+    // TEST 1: Using @google/genai SDK in browser
+    // ============================================================
+    window.runTest1 = async function() {
+      const log = document.getElementById('log1');
+      const btn = document.getElementById('btn1');
+      const apiKey = document.getElementById('apiKeyInput').value;
+      
+      if (!apiKey) { log.innerHTML = '<span class="err">❌ Enter API key first</span>'; return; }
+      
+      btn.disabled = true;
+      log.innerHTML = '<span class="info">📦 Importing @google/genai SDK...</span>\n';
+
+      try {
+        const { GoogleGenAI, Modality } = await import('https://esm.sh/@google/genai@latest');
+        log.innerHTML += '<span class="ok">✅ SDK imported successfully in browser</span>\n';
+        
+        const ai = new GoogleGenAI({ apiKey });
+        log.innerHTML += '<span class="info">🔌 Connecting to Live API with TEXT modality...</span>\n';
+
+        let responseText = '';
+        let turnComplete = false;
+
+        const session = await ai.live.connect({
+          model: 'gemini-3.1-flash-live-preview',
+          config: {
+            responseModalities: [Modality.TEXT],
+          },
+          callbacks: {
+            onopen() {
+              log.innerHTML += '<span class="ok">✅ WebSocket connected from browser!</span>\n';
+            },
+            onmessage(message) {
+              if (message.serverContent?.modelTurn?.parts) {
+                for (const part of message.serverContent.modelTurn.parts) {
+                  if (part.text) {
+                    responseText += part.text;
+                    log.innerHTML += part.text;
+                  }
+                }
+              }
+              if (message.serverContent?.turnComplete) {
+                turnComplete = true;
+              }
+            },
+            onerror(e) {
+              log.innerHTML += `<span class="err">❌ Error: ${e.message}</span>\n`;
+            },
+            onclose(e) {
+              log.innerHTML += `\n<span class="info">🔌 Closed: ${e.reason || 'normal'}</span>\n`;
+            },
+          },
+        });
+
+        log.innerHTML += '<span class="info">📤 Sending prompt...</span>\n';
+        session.sendClientContent({
+          turns: [{ role: 'user', parts: [{ text: 'In 1 sentence, describe a coffee cup as a magical artifact.' }] }],
+          turnComplete: true,
+        });
+
+        // Wait for response
+        const start = Date.now();
+        while (!turnComplete && Date.now() - start < 15000) {
+          await new Promise(r => setTimeout(r, 200));
+        }
+
+        log.innerHTML += `\n\n<span class="${responseText ? 'ok' : 'err'}">Result: ${responseText ? '✅ TEXT modality works in browser!' : '❌ No response received'}</span>\n`;
+        session.close();
+      } catch (err) {
+        log.innerHTML += `<span class="err">❌ FAILED: ${err.message}\n${err.stack || ''}</span>\n`;
+      }
+      btn.disabled = false;
+    };
+
+    // ============================================================
+    // TEST 2: Raw WebSocket (no SDK, pure browser WebSocket)
+    // ============================================================
+    window.runTest2 = async function() {
+      const log = document.getElementById('log2');
+      const btn = document.getElementById('btn2');
+      const apiKey = document.getElementById('apiKeyInput').value;
+      
+      if (!apiKey) { log.innerHTML = '<span class="err">❌ Enter API key first</span>'; return; }
+      
+      btn.disabled = true;
+      log.innerHTML = '<span class="info">🔌 Connecting via raw WebSocket...</span>\n';
+
+      try {
+        const model = 'gemini-3.1-flash-live-preview';
+        const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+
+        const ws = new WebSocket(wsUrl);
+        let responseText = '';
+
+        ws.onopen = () => {
+          log.innerHTML += '<span class="ok">✅ Raw WebSocket connected!</span>\n';
+          
+          // Send setup message
+          const setupMsg = {
+            setup: {
+              model: `models/${model}`,
+              generationConfig: {
+                responseModalities: ['TEXT'],
+              },
+            },
+          };
+          ws.send(JSON.stringify(setupMsg));
+          log.innerHTML += '<span class="info">📤 Setup message sent</span>\n';
+        };
+
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          
+          if (data.setupComplete) {
+            log.innerHTML += '<span class="ok">✅ Setup complete, sending prompt...</span>\n';
+            
+            // Send prompt
+            const promptMsg = {
+              clientContent: {
+                turns: [{ role: 'user', parts: [{ text: 'In 1 sentence, describe a stapler as a dungeon weapon.' }] }],
+                turnComplete: true,
+              },
+            };
+            ws.send(JSON.stringify(promptMsg));
+          }
+
+          if (data.serverContent?.modelTurn?.parts) {
+            for (const part of data.serverContent.modelTurn.parts) {
+              if (part.text) {
+                responseText += part.text;
+                log.innerHTML += part.text;
+              }
+            }
+          }
+
+          if (data.serverContent?.turnComplete) {
+            log.innerHTML += `\n\n<span class="ok">✅ Raw WebSocket TEXT modality works! Response: ${responseText}</span>\n`;
+            ws.close();
+          }
+        };
+
+        ws.onerror = (e) => {
+          log.innerHTML += `<span class="err">❌ WebSocket error: ${e.type}</span>\n`;
+        };
+
+        ws.onclose = (e) => {
+          log.innerHTML += `<span class="info">🔌 Closed: code=${e.code} reason=${e.reason || 'none'}</span>\n`;
+          btn.disabled = false;
+        };
+
+        // Timeout
+        setTimeout(() => {
+          if (ws.readyState === WebSocket.OPEN) {
+            log.innerHTML += '<span class="err">⏰ Timeout — closing</span>\n';
+            ws.close();
+          }
+          btn.disabled = false;
+        }, 20000);
+
+      } catch (err) {
+        log.innerHTML += `<span class="err">❌ FAILED: ${err.message}</span>\n`;
+        btn.disabled = false;
+      }
+    };
+  </script>
+</body>
+</html>
