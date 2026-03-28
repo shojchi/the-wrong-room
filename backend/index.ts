@@ -7,9 +7,9 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load the .env.local file from the project root
+// Load the .env.local file from the backend folder
 // In production, you would configure environment variables natively.
-dotenv.config({ path: resolve(__dirname, '../.env.local') });
+dotenv.config({ path: resolve(__dirname, '.env.local') });
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -20,7 +20,7 @@ app.use(express.json());
 
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
-  console.error('❌ ERROR: Missing GEMINI_API_KEY environment variable. Check ../.env.local');
+  console.error('❌ ERROR: Missing GEMINI_API_KEY environment variable. Check .env.local');
 }
 
 // Lightweight proxy/token approach for the hackathon

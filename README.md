@@ -15,11 +15,12 @@ This is a monorepo containing:
 ## Local Setup & Running the App
 
 ### 1. Configure the Environment Variables
-Before running the application, you need to set up the Gemini API key. Add it to the root project directory, which serves as the central configuration point.
+Before running the application, you need to set up the Gemini API key. Add it to the `backend` directory, which serves as the central configuration point.
 
-1. Create a file named `.env.local` inside the root folder:
+1. Create a file named `.env.local` inside the `backend/` folder:
 ```bash
-touch .env.local
+# From the root directory:
+touch backend/.env.local
 ```
 
 2. Add your Gemini API key to `.env.local`:
