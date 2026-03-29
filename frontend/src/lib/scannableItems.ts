@@ -2,19 +2,21 @@
 // We explicitly exclude 'person' to avoid players scanning themselves,
 // and other irrelevant objects to ensure thematic game artifacts.
 
-const SCANNABLE_LABELS = new Set([
-  "cell phone",
-  "clock",
-  "apple",
-  "cup",
-  "bowl",
-  "banana",
-  "pizza",
-  "laptop",
-  "keyboard",
-  "bottle",
-]);
+export const SCANNABLE_LABELS = [
+  { label: "cell phone", icon: "📱" },
+  { label: "clock", icon: "⏰" },
+  { label: "apple", icon: "🍎" },
+  { label: "cup", icon: "☕" },
+  { label: "bowl", icon: "🥣" },
+  { label: "banana", icon: "🍌" },
+  { label: "pizza", icon: "🍕" },
+  { label: "laptop", icon: "💻" },
+  { label: "keyboard", icon: "⌨️" },
+  { label: "bottle", icon: "🍶" },
+];
+
+const SCANNABLE_SET = new Set(SCANNABLE_LABELS.map(item => item.label));
 
 export function isScannableItem(label: string): boolean {
-  return SCANNABLE_LABELS.has(label.toLowerCase());
+  return SCANNABLE_SET.has(label.toLowerCase());
 }

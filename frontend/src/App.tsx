@@ -9,6 +9,7 @@ import { fetchLiveApiToken } from "./lib/tokenManager";
 import { audioPlayer } from "./lib/audioPlayer";
 import { GeminiLiveSession } from "./lib/geminiLive";
 import { NarrativePhase } from "./components/NarrativePhase";
+import { SCANNABLE_LABELS } from "./lib/scannableItems";
 
 function App() {
   const [gameState, setGameState] = useState<GameState>(initialState);
@@ -264,8 +265,25 @@ function App() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-gray-700/50 w-full bg-black">
+                <div className="rounded-2xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-gray-700/50 w-full bg-black leading-none">
                   <Scanner onDetected={handleObjectDetected} />
+                </div>
+
+                {/* Scannable Suggestions */}
+                <div className="mt-8 w-full">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-[0.3em] font-bold text-center mb-4 opacity-70">
+                    Recognized Reality Patterns:
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-2 max-w-sm mx-auto">
+                    {SCANNABLE_LABELS.map((item) => (
+                      <span 
+                        key={item.label}
+                        className="px-3 py-1 bg-purple-900/10 border border-purple-500/20 rounded-full text-[10px] text-purple-400/80 uppercase tracking-widest font-bold shadow-[0_0_10px_rgba(168,85,247,0.05)] hover:border-purple-500/40 transition-colors"
+                      >
+                        {item.icon} {item.label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <button

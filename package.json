@@ -1,0 +1,25 @@
+{
+  "name": "wrong_room",
+  "version": "1.0.0",
+  "description": "**The Wrong Room** is a browser-based, AI-powered interactive dungeon game. It leverages MediaPipe for real-time object detection (using your webcam to find items like apples, cell phones, and wristwatches) and integrates with the Gemini Live API for real-time, dynamic narrative streaming to act as your Dungeon Master.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"cyan,magenta\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:frontend": "npm run dev --prefix frontend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shojchi/wrong_room.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shojchi/wrong_room/issues"
+  },
+  "homepage": "https://github.com/shojchi/wrong_room#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
